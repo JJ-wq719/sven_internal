@@ -127,7 +127,7 @@ bool IsTertiaryAttackGlitchInit_Server()
 	return s_bTertiaryAttackGlitchInitialized_Server;
 }
 
-static bool InitTertiaryAttackPatch(CPatcher &patcher, void *pfnTertiaryAttack)
+static bool InitTertiaryAttackPatch(CPatcher& patcher, void* pfnTertiaryAttack)
 {
 	ud_t instruction;
 
@@ -157,65 +157,73 @@ static bool InitTertiaryAttackPatch(CPatcher &patcher, void *pfnTertiaryAttack)
 static void InitTertiaryAttackGlitch()
 {
 	ud_t instruction;
-	DWORD *dwVTable[] = { NULL, NULL, NULL, NULL };
+	DWORD* dwVTable[] = { NULL, NULL, NULL, NULL };
 
-	void *weapon_gauss = Sys_GetProcAddress( SvenModAPI()->Modules()->Client, "weapon_gauss" ); // vtable <- (byte *)weapon_gauss + 0x63
-	void *weapon_minigun = Sys_GetProcAddress( SvenModAPI()->Modules()->Client, "weapon_minigun" ); // vtable <- (byte *)weapon_minigun + 0x63
-	void *weapon_handgrenade = Sys_GetProcAddress( SvenModAPI()->Modules()->Client, "weapon_handgrenade" ); // vtable <- (byte *)weapon_handgrenade + 0x63
-	void *weapon_shockrifle = Sys_GetProcAddress( SvenModAPI()->Modules()->Client, "weapon_shockrifle" ); // vtable <- (byte *)weapon_shockrifle + 0x67
+	constexpr unsigned long tertiaryAttackOffset = 150;
 
-	if ( !weapon_gauss || !weapon_minigun || !weapon_handgrenade || !weapon_shockrifle )
+	constexpr unsigned long offset1 = 0x63;
+	constexpr unsigned long offset2 = 0x63;
+	constexpr unsigned long offset3 = 0x63;
+
+	constexpr unsigned long offset4 = 0x6C;
+
+	void* weapon_gauss = Sys_GetProcAddress(SvenModAPI()->Modules()->Client, "weapon_gauss"); // vtable <- (byte *)weapon_gauss + 0x63
+	void* weapon_minigun = Sys_GetProcAddress(SvenModAPI()->Modules()->Client, "weapon_minigun"); // vtable <- (byte *)weapon_minigun + 0x63
+	void* weapon_handgrenade = Sys_GetProcAddress(SvenModAPI()->Modules()->Client, "weapon_handgrenade"); // vtable <- (byte *)weapon_handgrenade + 0x63
+	void* weapon_shockrifle = Sys_GetProcAddress(SvenModAPI()->Modules()->Client, "weapon_shockrifle"); // vtable <- (byte *)weapon_shockrifle + 0x67
+
+	if (!weapon_gauss || !weapon_minigun || !weapon_handgrenade || !weapon_shockrifle)
 	{
 		Warning("Tertiary Attack Glitch: missing exported \"weapon_*\" funcs\n");
 		return;
 	}
 
 	// weapon_gauss
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_gauss + 0x63, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_gauss + offset1, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[0] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[0] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch: can't init weapon_gauss\n");
-		
+
 	// weapon_minigun
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_minigun + 0x63, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_minigun + offset2, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[1] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[1] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch: can't init weapon_minigun\n");
-		
+
 	// weapon_handgrenade
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_handgrenade + 0x63, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_handgrenade + offset3, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[2] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[2] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch: can't init weapon_handgrenade\n");
-		
+
 	// weapon_shockrifle
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_shockrifle + 0x67, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_shockrifle + offset4, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[3] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[3] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch: can't init weapon_shockrifle\n");;
 
-	if ( !InitTertiaryAttackPatch(GaussTertiaryAttack, (void *)dwVTable[0][150]) ) // CBasePlayerWeapon::TertiaryAttack
+	if (!InitTertiaryAttackPatch(GaussTertiaryAttack, (void*)dwVTable[0][tertiaryAttackOffset])) // CBasePlayerWeapon::TertiaryAttack
 		return;
-	
-	if ( !InitTertiaryAttackPatch(MinigunTertiaryAttack, (void *)dwVTable[1][150]) )
+
+	if (!InitTertiaryAttackPatch(MinigunTertiaryAttack, (void*)dwVTable[1][tertiaryAttackOffset]))
 		return;
-	
-	if ( !InitTertiaryAttackPatch(HandGrenadeTertiaryAttack, (void *)dwVTable[2][150]) )
+
+	if (!InitTertiaryAttackPatch(HandGrenadeTertiaryAttack, (void*)dwVTable[2][tertiaryAttackOffset]))
 		return;
-	
-	if ( !InitTertiaryAttackPatch(ShockRifleTertiaryAttack, (void *)dwVTable[3][150]) )
+
+	if (!InitTertiaryAttackPatch(ShockRifleTertiaryAttack, (void*)dwVTable[3][tertiaryAttackOffset]))
 		return;
 
 	s_bTertiaryAttackGlitchInitialized = true;
@@ -224,82 +232,90 @@ static void InitTertiaryAttackGlitch()
 void InitTertiaryAttackGlitch_Server(HMODULE hServerDLL)
 {
 	ud_t instruction;
-	DWORD *dwVTable[] = { NULL, NULL, NULL, NULL, NULL };
+	DWORD* dwVTable[] = { NULL, NULL, NULL, NULL, NULL };
 
-	void *weapon_gauss = Sys_GetProcAddress( hServerDLL, "weapon_gauss" ); // vtable <- (byte *)weapon_gauss + 0x7B
-	void *weapon_minigun = GetProcAddress( hServerDLL, "weapon_minigun" ); // vtable <- (byte *)weapon_minigun + 0x7B
-	void *weapon_handgrenade = GetProcAddress( hServerDLL, "weapon_handgrenade" ); // vtable <- (byte *)weapon_handgrenade + 0x7B
-	void *weapon_shockrifle = GetProcAddress( hServerDLL, "weapon_shockrifle" ); // vtable <- (byte *)weapon_shockrifle + 0x83
-	void *weapon_egon = GetProcAddress( hServerDLL, "weapon_egon" ); // vtable <- (byte *)weapon_egon + 0x83
+	constexpr unsigned long tertiaryAttackOffset = 153;
 
-	if ( !weapon_gauss || !weapon_minigun || !weapon_handgrenade || !weapon_shockrifle || !weapon_egon )
+	constexpr unsigned long offset1 = 0x87;
+	constexpr unsigned long offset2 = 0x8B;
+	constexpr unsigned long offset3 = 0x87;
+	constexpr unsigned long offset4 = 0x96;
+	constexpr unsigned long offset5 = 0x8F;
+
+
+	void* weapon_gauss = Sys_GetProcAddress(hServerDLL, "weapon_gauss"); // vtable <- (byte *)weapon_gauss + 0x7B
+	void* weapon_minigun = GetProcAddress(hServerDLL, "weapon_minigun"); // vtable <- (byte *)weapon_minigun + 0x7B
+	void* weapon_handgrenade = GetProcAddress(hServerDLL, "weapon_handgrenade"); // vtable <- (byte *)weapon_handgrenade + 0x7B
+	void* weapon_shockrifle = GetProcAddress(hServerDLL, "weapon_shockrifle"); // vtable <- (byte *)weapon_shockrifle + 0x83
+	void* weapon_egon = GetProcAddress(hServerDLL, "weapon_egon"); // vtable <- (byte *)weapon_egon + 0x83
+
+	if (!weapon_gauss || !weapon_minigun || !weapon_handgrenade || !weapon_shockrifle || !weapon_egon)
 	{
 		Warning("Tertiary Attack Glitch [S]: missing exported \"weapon_*\" funcs\n");
 	}
 
 	// weapon_gauss
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_gauss + 0x7B, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_gauss + offset1, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[0] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[0] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch [S]: can't init weapon_gauss\n");
 
 	// weapon_minigun
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_minigun + 0x7B, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_minigun + offset2, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[1] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[1] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch [S]: can't init weapon_minigun\n");
 
 	// weapon_handgrenade
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_handgrenade + 0x7B, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_handgrenade + offset3, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[2] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[2] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch [S]: can't init weapon_handgrenade\n");
 
 	// weapon_shockrifle
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_shockrifle + 0x83, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_shockrifle + offset4, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[3] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[3] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch [S]: can't init weapon_shockrifle\n");
 
 	// weapon_egon
-	MemoryUtils()->InitDisasm(&instruction, (BYTE *)weapon_egon + 0x83, 32, 15);
+	MemoryUtils()->InitDisasm(&instruction, (BYTE*)weapon_egon + offset5, 32, 15);
 	MemoryUtils()->Disassemble(&instruction);
 
 	if (instruction.mnemonic == UD_Imov && instruction.operand[0].type == UD_OP_MEM && instruction.operand[1].type == UD_OP_IMM)
-		dwVTable[4] = reinterpret_cast<DWORD *>(instruction.operand[1].lval.udword);
+		dwVTable[4] = reinterpret_cast<DWORD*>(instruction.operand[1].lval.udword);
 	else
 		return Warning("Tertiary Attack Glitch [S]: can't init weapon_egon\n");
 
-	if ( !InitTertiaryAttackPatch(GaussTertiaryAttack_Server, (void *)dwVTable[0][151]) ) // CBasePlayerWeapon::TertiaryAttack
+	if (!InitTertiaryAttackPatch(GaussTertiaryAttack_Server, (void*)dwVTable[0][tertiaryAttackOffset])) // CBasePlayerWeapon::TertiaryAttack
 		return;
-	
-	if ( !InitTertiaryAttackPatch(MinigunTertiaryAttack_Server, (void *)dwVTable[1][151]) )
+
+	if (!InitTertiaryAttackPatch(MinigunTertiaryAttack_Server, (void*)dwVTable[1][tertiaryAttackOffset]))
 		return;
-	
-	if ( !InitTertiaryAttackPatch(HandGrenadeTertiaryAttack_Server, (void *)dwVTable[2][151]) )
+
+	if (!InitTertiaryAttackPatch(HandGrenadeTertiaryAttack_Server, (void*)dwVTable[2][tertiaryAttackOffset]))
 		return;
-	
-	if ( !InitTertiaryAttackPatch(ShockRifleTertiaryAttack_Server, (void *)dwVTable[3][151]) )
+
+	if (!InitTertiaryAttackPatch(ShockRifleTertiaryAttack_Server, (void*)dwVTable[3][tertiaryAttackOffset]))
 		return;
-	
-	if ( !InitTertiaryAttackPatch(GluonGunTertiaryAttack_Server, (void *)dwVTable[4][151]) )
+
+	if (!InitTertiaryAttackPatch(GluonGunTertiaryAttack_Server, (void*)dwVTable[4][tertiaryAttackOffset]))
 		return;
 
 	s_bTertiaryAttackGlitchInitialized_Server = true;
 }
-
 //-----------------------------------------------------------------------------
 // ex_interp & cl_updaterate patch
 //-----------------------------------------------------------------------------
@@ -359,6 +375,7 @@ void CPatchesModule::ResumeThreads()
 
 bool CPatchesModule::PatchInterp()
 {
+#if !HOOK_INTEPR_BOUND
 	DWORD dwProtection;
 
 	void *pPatchInterpString = MemoryUtils()->FindString(SvenModAPI()->Modules()->Hardware, "cl_updaterate min");
@@ -376,18 +393,23 @@ bool CPatchesModule::PatchInterp()
 		Warning("'Patch Interp' failed initialization #2\n");
 		return false;
 	}
+	
+	constexpr unsigned int patchstart = 0x1F;
+	constexpr unsigned int patchInterpDupeSize = 0x1DF;
 
-	m_pInterpClampBegin = (void *)(pPatchInterp - 0x1F);
-	m_pDupedInterpClamp = (void *)malloc(0x1DF);
+
+	m_pInterpClampBegin = (void *)(pPatchInterp - patchstart);
+	m_pDupedInterpClamp = (void *)malloc(patchInterpDupeSize);
+
 
 	if (!m_pDupedInterpClamp)
 	{
-		Sys_Error("[Sven Internal] Failed to allocate memory");
+		Sys_Error("[SvenInt] Failed to allocate memory");
 		return false;
 	}
 
-	memcpy(m_pDupedInterpClamp, m_pInterpClampBegin, 0x1DF);
-	VirtualProtect(m_pInterpClampBegin, 0x1DF, PAGE_EXECUTE_READWRITE, &dwProtection);
+	memcpy(m_pDupedInterpClamp, m_pInterpClampBegin, patchInterpDupeSize);
+	VirtualProtect(m_pInterpClampBegin, patchInterpDupeSize, PAGE_EXECUTE_READWRITE, &dwProtection);
 
 	// go back to PUSH opcode
 	pPatchInterp -= 0x1;
@@ -398,14 +420,14 @@ bool CPatchesModule::PatchInterp()
 		return false;
 	}
 
-	if (*(pPatchInterp - 0x1F) != 0x7A) // JP opcode
+	if (*(pPatchInterp - patchstart) != 0x7A) // JP opcode
 	{
 		Warning("'Patch Interp' failed initialization #4\n");
 		return false;
 	}
 
 	// Patch cl_updaterate min.
-	*(pPatchInterp - 0x1F) = 0xEB;
+	*(pPatchInterp - patchstart) = 0xEB;
 	
 	// Go to PUSH string 'cl_updaterate max...'
 	pPatchInterp += 0x3F;
@@ -416,43 +438,48 @@ bool CPatchesModule::PatchInterp()
 		return false;
 	}
 
-	if (*(pPatchInterp - 0x1F) != 0x7A) // JP opcode
+	if (*(pPatchInterp - patchstart) != 0x7A) // JP opcode
 	{
 		Warning("'Patch Interp' failed initialization #6\n");
 		return false;
 	}
 
 	// Patch cl_updaterate max.
-	*(pPatchInterp - 0x1F) = 0xEB;
+	*(pPatchInterp - patchstart) = 0xEB;
 	
 	// Go to PUSH string 'ex_interp forced up...'
 	pPatchInterp += 0x62;
 
-	if (*pPatchInterp != 0xB8) // check MOV, EAX ... opcode
+	if (*pPatchInterp != 0x68) // check PUSH opcode
+
 	{
 		Warning("'Patch Interp' failed initialization #7\n");
 		return false;
 	}
 
-	if (*(pPatchInterp - 0x8) != 0x7D) // JNL opcode
+	if (*(pPatchInterp - 0x8) != 0x7D) // JNL Opcode, No existe mas :] sad 255
 	{
 		Warning("'Patch Interp' failed initialization #8\n");
 		return false;
-	}
+	}	
 
 	// Patch ex_interp force up
 	*(pPatchInterp - 0x8) = 0xEB;
+	
+	constexpr unsigned long forceDownOffset = 0x1C;
+	constexpr unsigned long forceDownCheckOpcode = 0x0F;
 
-	if (*(pPatchInterp + 0xD) != 0x7E) // JLE opcode
+	if (*(pPatchInterp + forceDownOffset) != forceDownCheckOpcode) // JLE opcode
 	{
 		Warning("'Patch Interp' failed initialization #9\n");
 		return false;
 	}
 
 	// Patch ex_interp force down
-	*(pPatchInterp + 0xD) = 0xEB;
+	*(pPatchInterp + forceDownOffset) = 0xEB; // TODO FIX MEEEEE    0F 8E BF 00 00 00  use JMP opcode
 
-	VirtualProtect(m_pInterpClampBegin, 0x1DF, dwProtection, &dwProtection);
+	VirtualProtect(m_pInterpClampBegin, patchInterpDupeSize, dwProtection, &dwProtection);
+#endif // #if !HOOK_INTEPR_BOUND
 
 	return true;
 }

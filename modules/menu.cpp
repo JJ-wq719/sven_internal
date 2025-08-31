@@ -9,7 +9,6 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_opengl2.h"
 
-#include "../features/models_manager.h"
 #include "../utils/menu_styles.h"
 #include "../config.h"
 
@@ -961,6 +960,7 @@ void CMenuModule::DrawWindowVisuals()
 				}
 				
 				// Models Manager
+				/*
 				if (ImGui::BeginTabItem("Models Manager"))
 				{
 					ImGui::Spacing();
@@ -1062,6 +1062,7 @@ void CMenuModule::DrawWindowVisuals()
 
 					ImGui::EndTabItem();
 				}
+				*/
 
 				// Misc (Skybox, Fog)
 				if (ImGui::BeginTabItem("Misc."))

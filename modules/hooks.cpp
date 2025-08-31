@@ -36,7 +36,6 @@
 #include "../features/skybox.h"
 #include "../features/dynamic_glow.h"
 #include "../features/chat_colors.h"
-#include "../features/models_manager.h"
 
 //-----------------------------------------------------------------------------
 // Declare hooks
@@ -438,7 +437,6 @@ HOOK_RESULT CClientHooks::HUD_VidInit(void)
 	g_CamHack.OnVideoInit();
 	g_AntiAFK.OnVideoInit();
 	g_Misc.OnVideoInit();
-	g_ModelsManager.OnVideoInit();
 
 	return HOOK_CONTINUE;
 }
