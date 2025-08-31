@@ -44,11 +44,19 @@ public:
 
 	virtual void Unpause(void);
 
+	virtual void OnFirstClientdataReceived(client_data_t* pcldata, float flTime) override;
+
+	virtual void OnBeginLoading(void) override;
+
+	virtual void OnEndLoading(void) override;
+
+	virtual void OnDisconnect(void) override;
+
 	virtual void GameFrame(client_state_t state, double frametime, bool bPostRunCmd);
 
-	virtual PLUGIN_RESULT Draw(void);
+	void Draw(void);
 
-	virtual PLUGIN_RESULT DrawHUD(float time, int intermission);
+	void DrawHUD(float time, int intermission);
 
 	virtual const char *GetName(void);
 
@@ -107,7 +115,7 @@ bool CSvenInternal::Load(CreateInterfaceFn pfnSvenModFactory, ISvenModAPI *pSven
 	g_Drawing.Init();
 	g_Visual.ResetJumpSpeed();
 
-	g_pEngineFuncs->ClientCmd("cl_timeout 999999;unbind F1;unbind F2;exec sven_internal.cfg");
+	g_pEngineFuncs->ClientCmd("cl_timeout 999999;exec sven_internal.cfg");
 	m_flPlatTime = g_pEngineFuncs->Sys_FloatTime();
 
 	ConColorMsg({ 40, 255, 40, 255 }, "[Sven Internal] Successfully loaded\n");
@@ -145,6 +153,26 @@ bool CSvenInternal::Pause(void)
 
 void CSvenInternal::Unpause(void)
 {
+}
+
+void CSvenInternal::OnFirstClientdataReceived(client_data_t* data, float time)
+{
+	// noop
+}
+
+void CSvenInternal::OnBeginLoading(void)
+{
+	// noop
+}
+
+void CSvenInternal::OnEndLoading(void)
+{
+	// noop
+}
+
+void CSvenInternal::OnDisconnect(void)
+{
+	// noop
 }
 
 void CSvenInternal::GameFrame(client_state_t state, double frametime, bool bPostRunCmd)
@@ -205,19 +233,15 @@ void CSvenInternal::GameFrame(client_state_t state, double frametime, bool bPost
 	}
 }
 
-PLUGIN_RESULT CSvenInternal::Draw(void)
+void CSvenInternal::Draw(void)
 {
 	g_Visual.Process();
 	g_VotePopup.Draw();
-
-	return PLUGIN_CONTINUE;
 }
 
-PLUGIN_RESULT CSvenInternal::DrawHUD(float time, int intermission)
+void CSvenInternal::DrawHUD(float time, int intermission)
 {
 	g_Visual.OnHUDRedraw(time);
-
-	return PLUGIN_CONTINUE;
 }
 
 const char *CSvenInternal::GetName(void)

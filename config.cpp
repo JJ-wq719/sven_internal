@@ -7,7 +7,6 @@
 #include "config.h"
 
 #include "features/skybox.h"
-#include "features/models_manager.h"
 
 #include "utils/menu_styles.h"
 
@@ -219,7 +218,7 @@ bool CConfig::Load()
 			ConfigManager()->EndSectionImport();
 		}
 
-		if (ConfigManager()->BeginSectionImport("MODELSMANAGER"))
+		/*if (ConfigManager()->BeginSectionImport("MODELSMANAGER"))
 		{
 			cvars.replace_model = NULL;
 
@@ -233,6 +232,7 @@ bool CConfig::Load()
 
 			ConfigManager()->EndSectionImport();
 		}
+		*/
 	
 		if (ConfigManager()->BeginSectionImport("CROSSHAIR"))
 		{
@@ -449,8 +449,8 @@ bool CConfig::Load()
 			ConfigManager()->ImportParam("ColorPulsatorBottom", cvars.color_pulsator_bottom);
 			ConfigManager()->ImportParam("ColorPulsatorDelay", cvars.color_pulsator_delay);
 			ConfigManager()->ImportParam("IgnoreDifferentMapVersions", cvars.ignore_different_map_versions);
-			ConfigManager()->ImportParam("UseOnlyHelmetModels", cvars.use_only_helmet_models);
-			ConfigManager()->ImportParam("UseHelmetModelOnSelf", cvars.use_helmet_model_on_self);
+			//ConfigManager()->ImportParam("UseOnlyHelmetModels", cvars.use_only_helmet_models);
+			//ConfigManager()->ImportParam("UseHelmetModelOnSelf", cvars.use_helmet_model_on_self);
 			ConfigManager()->ImportParam("OneTickExploit", cvars.one_tick_exploit);
 			ConfigManager()->ImportParam("OneTickExploitLagInterval", cvars.one_tick_exploit_lag_interval);
 			ConfigManager()->ImportParam("OneTickExploitSpeedhack", cvars.one_tick_exploit_speedhack);
@@ -572,7 +572,6 @@ bool CConfig::Load()
 		ConfigManager()->EndImport();
 
 		// Callbacks
-		g_ModelsManager.OnConfigLoad();
 		g_Skybox.OnConfigLoad();
 
 		return true;
@@ -682,7 +681,7 @@ void CConfig::Save()
 			ConfigManager()->EndSectionExport();
 		}
 	
-		if (ConfigManager()->BeginSectionExport("MODELSMANAGER"))
+		/*if (ConfigManager()->BeginSectionExport("MODELSMANAGER"))
 		{
 			ConfigManager()->ExportParam("ReplacePlayersModels", cvars.replace_players_models);
 			ConfigManager()->ExportParam("ReplaceModelOnSelf", cvars.replace_model_on_self);
@@ -694,6 +693,7 @@ void CConfig::Save()
 
 			ConfigManager()->EndSectionExport();
 		}
+		*/
 	
 		if (ConfigManager()->BeginSectionExport("CROSSHAIR"))
 		{
@@ -912,8 +912,8 @@ void CConfig::Save()
 			ConfigManager()->ExportParam("ColorPulsatorBottom", cvars.color_pulsator_bottom);
 			ConfigManager()->ExportParam("ColorPulsatorDelay", cvars.color_pulsator_delay);
 			ConfigManager()->ExportParam("IgnoreDifferentMapVersions", cvars.ignore_different_map_versions);
-			ConfigManager()->ExportParam("UseOnlyHelmetModels", cvars.use_only_helmet_models);
-			ConfigManager()->ExportParam("UseHelmetModelOnSelf", cvars.use_helmet_model_on_self);
+			//ConfigManager()->ExportParam("UseOnlyHelmetModels", cvars.use_only_helmet_models);
+			//ConfigManager()->ExportParam("UseHelmetModelOnSelf", cvars.use_helmet_model_on_self);
 			ConfigManager()->ExportParam("OneTickExploit", cvars.one_tick_exploit);
 			ConfigManager()->ExportParam("OneTickExploitLagInterval", cvars.one_tick_exploit_lag_interval);
 			ConfigManager()->ExportParam("OneTickExploitSpeedhack", cvars.one_tick_exploit_speedhack);
