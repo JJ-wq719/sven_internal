@@ -871,33 +871,35 @@ void CMisc::AutoJump(struct usercmd_s *cmd)
 // Auto Jumpbug
 //-----------------------------------------------------------------------------
 
-void CMisc::JumpBug(float frametime, struct usercmd_s *cmd)
+void CMisc::JumpBug(float frametime, struct usercmd_s* cmd)
 {
 	static int nJumpBugState = 0;
 
-	if (g_Config.cvars.jumpbug && Client()->GetFallVelocity() > 500.0f && g_pPlayerMove->movevars != NULL)
+	if (g_Config.cvars.jumpbug && g_pPlayerMove->flFallVelocity > 480.0f)
 	{
-		Vector vecPredictVelocity = Client()->GetVelocity() * frametime;
+		Vector vBottomOrigin = g_pPlayerMove->origin; vBottomOrigin.z -= 8192.0f;
+		pmtrace_t* pTrace = g_pEngineFuncs->PM_TraceLine(g_pPlayerMove->origin, vBottomOrigin, PM_NORMAL, /* g_pPlayerMove->usehull */ (g_pPlayerMove->flags & FL_DUCKING) ? 1 : 0, -1);
 
-		vecPredictVelocity.z = 0.f; // 2D only, height will be predicted separately
-
-		Vector vecPredictOrigin = g_pPlayerMove->origin + vecPredictVelocity;
-		Vector vBottomOrigin = vecPredictOrigin;
-
-		vBottomOrigin.z -= 8192.0f;
-
-		pmtrace_t *pTrace = g_pEngineFuncs->PM_TraceLine(vecPredictOrigin,
-														 vBottomOrigin,
-														 PM_NORMAL,
-														 (Client()->GetFlags() & FL_DUCKING) ? 1 : 0 /* g_pPlayerMove->usehull */,
-														 -1);
-
-		float flHeight = fabsf(pTrace->endpos.z - vecPredictOrigin.z);
+		float flHeight = fabsf(pTrace->endpos.z - g_pPlayerMove->origin.z);
 		float flGroundNormalAngle = acos(pTrace->plane.normal.z);
 
-		if ( flGroundNormalAngle <= acosf(0.7f) && Client()->GetWaterLevel() == WL_NOT_IN_WATER && g_pEngineFuncs->PM_WaterEntity(pTrace->endpos) == -1 )
+		if (flGroundNormalAngle <= acosf(0.7f) && g_pPlayerMove->waterlevel == WL_NOT_IN_WATER)
 		{
-			float flFrameZDist = fabsf( (Client()->GetFallVelocity() + (g_pPlayerMove->movevars->gravity * frametime)) * frametime );
+			float flPlayerHeight = flHeight; // = 0.0f
+			float flFrameZDist = fabsf((g_pPlayerMove->flFallVelocity + (800.0f * frametime)) * frametime);
+
+			//if (g_Local.flGroundNormalAngle > 1.0f)
+			//{
+				//bool bDuck = g_pPlayerMove->flags & FL_DUCKING;
+				//Vector vBottomOrigin = g_pPlayerMove->origin; vBottomOrigin.z -= 8192.0f;
+
+				//pmtrace_t *pTrace = g_pEngineFuncs->PM_TraceLine(g_pPlayerMove->origin, vBottomOrigin, PM_NORMAL, bDuck ? 1 : 0 /* g_pPlayerMove->usehull */, -1);
+				//flPlayerHeight = fabsf(g_pPlayerMove->origin.z - pTrace->endpos.z + (bDuck ? 18.0f : 36.0f));
+			//}
+			//else
+			//{
+				//flPlayerHeight = g_Local.flHeight;
+			//}
 
 			cmd->buttons |= IN_DUCK;
 			cmd->buttons &= ~IN_JUMP;
@@ -916,9 +918,9 @@ void CMisc::JumpBug(float frametime, struct usercmd_s *cmd)
 				break;
 
 			default:
-				if (flFrameZDist > 0.f && fabsf(flHeight - flFrameZDist * 1.5f) <= 20.f)
+				if (fabsf(flPlayerHeight - flFrameZDist * 1.5f) <= 20.0f && flFrameZDist > 0.0f)
 				{
-					float flNeedSpeed = fabsf(flHeight - 19.f);
+					float flNeedSpeed = fabsf(flPlayerHeight - 19.f);
 					float flScale = fabsf(flNeedSpeed / flFrameZDist);
 
 					UTIL_SetGameSpeed(flScale);
